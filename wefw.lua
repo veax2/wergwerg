@@ -54,7 +54,7 @@ testSection:AddButton(
 local testSection = TeleportTab:CreateSector("Teleports", "left")
 
 testSection:AddButton("Double Barrel", function()
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1039.59985, 18.8513641, -256.449951, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(218.033447265625, 3.7371325492858887, -331.3202819824219, -1, 0, 0, 0, 1, 0, 0, 0, -1)
 end)
 
 testSection:AddButton("Revolver", function()
