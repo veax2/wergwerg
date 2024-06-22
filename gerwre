@@ -1,0 +1,112 @@
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Utwórz główny Frame dla prostokąta
+local mainFrame = Instance.new("Frame")
+mainFrame.Parent = screenGui
+mainFrame.Size = UDim2.new(0, 300, 0, 700)  -- Dopasowanie do elementów
+mainFrame.Position = UDim2.new(0.75, -150, 0.5, -350)  -- Wyśrodkowanie na prawo na ekranie
+mainFrame.BackgroundColor3 = Color3.new(0, 0, 0)  -- Czarne tło
+mainFrame.BackgroundTransparency = 1  -- Przezroczyste tło
+mainFrame.Active = true
+mainFrame.Draggable = true  -- Umożliwienie przeciągania myszką
+
+-- Utwórz TextButton dla przycisku zamykającego
+local closeButton = Instance.new("TextButton")
+closeButton.Parent = mainFrame
+closeButton.Size = UDim2.new(0, 20, 0, 20)  -- Rozmiar przycisku (mały)
+closeButton.Position = UDim2.new(1, -30, 0, 5)  -- Pozycja przycisku (prawy górny róg, blisko listy)
+closeButton.BackgroundColor3 = Color3.new(1, 0, 0)  -- Kolor przycisku (czerwony)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.new(1, 1, 1)  -- Kolor tekstu (biały)
+closeButton.Font = Enum.Font.Arial
+closeButton.TextSize = 14  -- Rozmiar tekstu (mniejszy)
+
+-- Funkcja do zamykania GUI
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+-- Funkcja do tworzenia GUI dla każdego ATM-a
+local function createGuiForATM(atm, index)
+    -- Utwórz Frame dla kwadratu
+    local statusSquare = Instance.new("Frame")
+    statusSquare.Parent = mainFrame
+    statusSquare.Size = UDim2.new(0, 40, 0, 40)  -- Rozmiar kwadratu
+    statusSquare.Position = UDim2.new(0, 10, 0, (index - 1) * 50 + 10)  -- Pozycja kwadratu (lewa strona, względem mainFrame)
+    statusSquare.BackgroundColor3 = Color3.new(0, 1, 0)  -- Kolor kwadratu (zielony)
+
+    -- Pętla sprawdzająca wartość Transparency i aktualizująca kolor kwadratu
+    local runService = game:GetService("RunService")
+
+    runService.RenderStepped:Connect(function()
+        local atmScreen = atm:FindFirstChild("ATMScreen")
+        if atmScreen then
+            if atmScreen.Transparency == 0 then
+                statusSquare.BackgroundColor3 = Color3.new(0, 1, 0)  -- Zielony kolor, gdy Transparency == 0
+            else
+                statusSquare.BackgroundColor3 = Color3.new(1, 0, 0)  -- Czerwony kolor, gdy Transparency != 0
+            end
+        end
+    end)
+
+    -- Utwórz TextLabel dla napisu ATM
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Parent = mainFrame
+    textLabel.Size = UDim2.new(0, 240, 0, 40)  -- Rozmiar TextLabel
+    textLabel.Position = UDim2.new(0, 60, 0, (index - 1) * 50 + 10)  -- Pozycja TextLabel (prawa strona, względem mainFrame)
+    textLabel.BackgroundColor3 = Color3.new(0, 0, 0)  -- Czarne tło (przezroczyste)
+    textLabel.BackgroundTransparency = 1  -- Przezroczyste tło
+    textLabel.TextColor3 = Color3.new(1, 1, 1)  -- Kolor tekstu (biały)
+    textLabel.Text = atm.Name
+    textLabel.Font = Enum.Font.SourceSans
+    textLabel.TextSize = 24
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left  -- Tekst wyrównany do lewej strony
+    textLabel.TextWrapped = true  -- Zawijanie tekstu, jeśli jest za długi
+end
+
+-- Dodaj GUI dla każdego ATM-a
+for i = 1, 15 do
+    local atmName = "ATM" .. i
+    local atm = game.Workspace.ATMS:FindFirstChild(atmName)
+    if atm then
+        createGuiForATM(atm, i)
+    end
+end
+
+-- Funkcja do obsługi przeciągania
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        update(input)
+    end
+end)
